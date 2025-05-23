@@ -2,7 +2,39 @@
 
 const express = require('express')
 const cors  = require('cors')
+const mongoose = require('mongoose')
 
+// mongoose settings
+const password = process.argv[2]
+const url = `mongodb+srv://jkhloomis:${password}@cluster0.z1gftkf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+mongoose.set('strictQuery',false)
+try {
+  mongoose.connect(url)
+  console.log("connected")
+} catch (error){
+  console.log(error.message)
+  console.log(error.line)
+  console.log(error.cause)
+}
+const noteSchema = new mongoose.Schema({
+  content: String,
+  important: Boolean,
+})
+
+// this ensures that the id property that we get is not an object but a string. It will not change anything in the database
+noteSchema.set('toJson',{
+  // defines a transform function within the setter
+  transform: (document,returnedObject) => {
+    returnedObject.id = returnedObject._id.toString()
+    delete returnedObject._id
+  }
+})
+
+const Note = mongoose.model('Note',noteSchema)
+
+
+
+// Express settings
 const app = express()
 app.use(cors())
 app.use(express.static('dist'))
@@ -30,12 +62,31 @@ let notes = [
   }
 ]
 
+ async function getCollections(){
+      const collections = await mongoose.connection.listCollections()
+      console.log("Collections:",collections)
+    }
+
 app.get('/',(request, response)=> {
   response.send('server/dist/assets/index-OAzzoRJh.js')
 })
 
+// Fetch All
 app.get('/api/notes',(request,response) => {
-  response.json(notes)
+  console.log('finding notes')
+
+  Note.find({}).then(notes => {
+    getCollections()
+    console.log("found all notes",notes)
+    response.json(notes)
+    notes.forEach(note => {
+      console.log("logging individual note")
+      console.log(note)
+    })
+  })
+  // .catch(error => {
+  //   next(err)
+  // })
 })
 
 app.get('/api/notes/:id',(request,response) => {
@@ -81,6 +132,12 @@ app.delete('/api/notes/:id',(request,response) =>{
   const id = request.params.id
   notes = notes.filter(note => note.id !== id)
   response.status(204).end()
+})
+
+app.use((err,req,res,next)=>{
+  console.log(err.message)
+  console.log(err.cause)
+  console.log(err.line)
 })
 
 const PORT = process.env.PORT || 3001
