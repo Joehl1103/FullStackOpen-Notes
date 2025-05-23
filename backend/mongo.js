@@ -11,7 +11,7 @@ const url = `mongodb+srv://jkhloomis:${password}@cluster0.z1gftkf.mongodb.net/no
 
 mongoose.set('strictQuery',false)
 
-mongoose.connect(url).then()
+mongoose.connect(url)
 
 const noteSchema = new mongoose.Schema({
     content: String,
@@ -20,33 +20,21 @@ const noteSchema = new mongoose.Schema({
 
 const Note = mongoose.model('Note',noteSchema)
 
-const note1 = new Note({
-    content: "HTML is easy",
+const note = new Note({
+    content: "SQL is relatively easy but can get complicated fast",
     important: true
 })
 
-const note2 = new Note({
-    content: "CSS is easy",
-    important: false
-})
+// note.save().then(result => {
+//     console.log('note saved!')
+//     mongoose.connection.close()
+//})
 
-const note3 = new Note({
-    content: "JS is not easy",
-    important: true
-})
-
-const note4 = new Note({
-    content: "Java is 'interesting'",
-    important: false
-})
-
-const noteArray = [note1,note2,note3,note4]
-
-
-noteArray.forEach(note =>{
-    note.save().then(result => {
-    console.log('note saved!')
+Note.find({important: false}).then(result => {
+    result.forEach(note => {
+        console.log(note)
     })
+    mongoose.connection.close()
 })
 
-mongoose.connection.close()
+
