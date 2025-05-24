@@ -1,6 +1,6 @@
 /*global require*/
 
-require('dotenv').config
+require('dotenv').config()
 const express = require('express')
 const cors  = require('cors')
 const mongoose = require('mongoose')
@@ -18,23 +18,6 @@ takes the JSON data of a request, transforms it into a JS object and then attach
 */
 app.use(express.json())
 
-let notes = [
-  {
-    id: "1",
-    content: "HTML is easy",
-    important: true
-  },
-  {
-    id: "2",
-    content: "Browser can execute only JavaScript",
-    important: false
-  },
-  {
-    id: "3",
-    content: "GET and POST are the most important methods of HTTP protocol",
-    important: true
-  }
-]
 
  async function getCollections(){
       const collections = await mongoose.connection.listCollections()
@@ -51,11 +34,8 @@ app.get('/api/notes',(request,response) => {
   console.log('finding notes')
 
   Note.find({}).then(notes => {
-    getCollections()
-    console.log("found all notes",notes)
     response.json(notes)
     notes.forEach(note => {
-      console.log("logging individual note")
       console.log(note)
     })
   })
@@ -102,13 +82,14 @@ app.post('/api/notes',(request,response) => {
 
 //Delete Note
 app.delete('/api/notes/:id',(request,response) =>{
+  Note.deleteOne({_id: {$eq: request.params.id}})
   const id = request.params.id
   notes = notes.filter(note => note.id !== id)
   response.status(204).end()
 })
 
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT,() => {
   console.log(`Server running on port ${PORT}`)
 })
