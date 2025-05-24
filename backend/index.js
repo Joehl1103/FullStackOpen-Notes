@@ -1,43 +1,17 @@
 /*global require*/
 
+require('dotenv').config
 const express = require('express')
 const cors  = require('cors')
 const mongoose = require('mongoose')
-
-// mongoose settings
-const password = process.argv[2]
-const url = `mongodb+srv://jkhloomis:${password}@cluster0.z1gftkf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
-mongoose.set('strictQuery',false)
-try {
-  mongoose.connect(url)
-  console.log("connected")
-} catch (error){
-  console.log(error.message)
-  console.log(error.line)
-  console.log(error.cause)
-}
-const noteSchema = new mongoose.Schema({
-  content: String,
-  important: Boolean,
-})
-
-// this ensures that the id property that we get is not an object but a string. It will not change anything in the database
-noteSchema.set('toJson',{
-  // defines a transform function within the setter
-  transform: (document,returnedObject) => {
-    returnedObject.id = returnedObject._id.toString()
-    delete returnedObject._id
-  }
-})
-
-const Note = mongoose.model('Note',noteSchema)
-
+const Note = require('./models/note')
 
 
 // Express settings
 const app = express()
 app.use(cors())
 app.use(express.static('dist'))
+
 
 /* JSON Parsers
 takes the JSON data of a request, transforms it into a JS object and then attaches it to the body property of the request object
@@ -67,6 +41,7 @@ let notes = [
       console.log("Collections:",collections)
     }
 
+// Root
 app.get('/',(request, response)=> {
   response.send('server/dist/assets/index-OAzzoRJh.js')
 })
@@ -89,21 +64,21 @@ app.get('/api/notes',(request,response) => {
   // })
 })
 
+// Get note by Id
 app.get('/api/notes/:id',(request,response) => {
-  const id = request.params.id // this is tied dynamically to the data that is 'sent' 
-  const note = notes.find(note => note.id === id)
-  if (note){
+  Note.findById(request.params.id).then(note =>{
     response.json(note)
-  } else {
-    response.status(404).send("Note does not exist") // override the default
-  }
+  })
 })
+
+// Create Note
 const generateId= () => {
     const maxId = notes.length > 0
     ? Math.max(...notes.map(n => Number(n.id)))
     : 0
     return String(maxId + 1)
 }
+
 app.post('/api/notes',(request,response) => {
 
   const body = request.body
@@ -116,29 +91,22 @@ app.post('/api/notes',(request,response) => {
   }
 
   // since the body has content, construct the notes object
-  const note = {
+  const note =  new Note({
     content: body.content,
-    important: body.important || false,
-    id: generateId()
-  }
-
-  notes = notes.concat(note)
-
-  console.log(note)
-  response.json(note)
+    important: body.important || false
+  })
+  note.save().then(savedNote => {
+    response.json(savedNote)
+  })
 })
 
+//Delete Note
 app.delete('/api/notes/:id',(request,response) =>{
   const id = request.params.id
   notes = notes.filter(note => note.id !== id)
   response.status(204).end()
 })
 
-app.use((err,req,res,next)=>{
-  console.log(err.message)
-  console.log(err.cause)
-  console.log(err.line)
-})
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT,() => {
