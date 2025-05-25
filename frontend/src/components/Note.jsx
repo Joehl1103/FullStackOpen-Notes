@@ -1,11 +1,13 @@
 const Note  =(props)=> {
     const label = props.note.important ? 'make not important' : 'make important';
+    const note = props.note
+    console.log(typeof note.id)
 
     return (
         <li className='note'>
-          {props.note.content} {props.note.important === true && "🚨Important🚨"} 
-          <button onClick={props.toggleImportanceOf}>{label}</button>
-
+          {note.content} {note.important === true && "🚨Important🚨"}&nbsp;
+          <button onClick={props.toggleImportanceOf}>{label}</button>&nbsp;
+          <button onClick={() => props.deleteNote(note.id)}>Delete</button>
         </li>
     )
   

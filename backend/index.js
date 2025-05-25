@@ -15,9 +15,9 @@ app.use(express.static('dist'))
 
 /* JSON Parsers
 takes the JSON data of a request, transforms it into a JS object and then attaches it to the body property of the request object
+
 */
 app.use(express.json())
-
 
  async function getCollections(){
       const collections = await mongoose.connection.listCollections()
@@ -45,19 +45,18 @@ app.get('/api/notes',(request,response) => {
 })
 
 // Get note by Id
-app.get('/api/notes/:id',(request,response) => {
-  Note.findById(request.params.id).then(note =>{
-    response.json(note)
+app.get('/api/notes/:id',(request,response,next) => {
+  Note.findById(request.params.id)
+    .then(note =>{
+      if (note) {
+        console.log(note.toJSON())
+        response.json(note)
+      } else {
+        response.status(404).end()
+      }
   })
+  .catch(error => next(error))
 })
-
-// Create Note
-const generateId= () => {
-    const maxId = notes.length > 0
-    ? Math.max(...notes.map(n => Number(n.id)))
-    : 0
-    return String(maxId + 1)
-}
 
 app.post('/api/notes',(request,response) => {
 
@@ -81,12 +80,32 @@ app.post('/api/notes',(request,response) => {
 })
 
 //Delete Note
-app.delete('/api/notes/:id',(request,response) =>{
-  Note.deleteOne({_id: {$eq: request.params.id}})
+app.delete('/api/notes/:id',(request,response,next) =>{
   const id = request.params.id
-  notes = notes.filter(note => note.id !== id)
-  response.status(204).end()
+  Note.findByIdAndDelete(id)
+    .then(result => {
+      // check if a resources was actually deleted and return different status codes for two cases
+      console.log("result",result)
+      if (!result){
+        response.status(404).end()
+      }
+      response.status(204).end()
+    
+    })
+    .catch(error => next(error))
 })
+
+const errorHandler = (error,request,response,next)=>{
+  console.error("error message: ",error.message)
+
+  if(error.name === 'CastError'){
+    return response.status(400).send({error: 'malformed id'})
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 
 const PORT = process.env.PORT

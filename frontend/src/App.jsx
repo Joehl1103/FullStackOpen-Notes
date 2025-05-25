@@ -68,24 +68,32 @@ const App = () => {
     setNewNote(event.target.value)
   }
 
+  const deleteNote = (id) => {
+    noteService.deleteNote(id)
+      .then(response => {
+        console.log("delete response",response)
+        const notesCopy = [...notes].filter(note => note.id !== id)
+        setNotes(notesCopy)
+      })
+  }
+
   const notesToShow = showAll ? notes : notes.filter(note => note.important === true)
 
   return (
     <>
       <h1>Notes</h1>
       <Notification message={errorMessage}/>
+      <button onClick={() => setShowAll(!showAll)}>
+        Show {showAll ? 'important' : 'all'}
+      </button>
       <div>
-        <button onClick={() => setShowAll(!showAll)}>
-          Show {showAll ? 'important' : 'all'}
-        </button>
-      </div>
-      <ul>
-        {notesToShow.map(note => 
-          <Note 
+        {notesToShow.map(note =>
+          <Note
             key={note.id}
             note={note}
-            toggleImportanceOf={() => toggleImportanceOf(note.id)}/>)}
-      </ul>
+            toggleImportanceOf={() => toggleImportanceOf(note.id)}
+            deleteNote={deleteNote}/>)}
+      </div>
       <form onSubmit={addNote}>
           <input 
             value={newNote}
