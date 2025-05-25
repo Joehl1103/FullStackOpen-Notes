@@ -79,9 +79,30 @@ app.post('/api/notes',(request,response) => {
   })
 })
 
+app.put('/api/notes/:id',(request,response,next) => {
+  const {content,important} = request.body
+  console.log(`Note with content ${content} and of importance ${important} has id ${request.params.id}`)
+
+  Note.findById(request.params.id)
+    .then(note => {
+      if(!note){
+        return response.status(404).end()
+      }
+
+      note.content = content
+      note.important = important
+
+      return note.save().then((updatedNote => {
+        response.json(updatedNote)
+      }))
+    })
+    .catch(error => next(error))
+})
+
 //Delete Note
 app.delete('/api/notes/:id',(request,response,next) =>{
   const id = request.params.id
+  console.log(`id ${id} of type ${typeof id}`)
   Note.findByIdAndDelete(id)
     .then(result => {
       // check if a resources was actually deleted and return different status codes for two cases
