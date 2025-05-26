@@ -1,9 +1,6 @@
-/*global require*/
-
 require('dotenv').config()
 const express = require('express')
 const cors  = require('cors')
-const mongoose = require('mongoose')
 const Note = require('./models/note')
 
 
@@ -25,7 +22,7 @@ app.use(express.json())
 //     }
 
 // Root
-app.get('/',(request, response)=> {
+app.get('/',( request, response ) => {
   response.send('server/dist/assets/index-OAzzoRJh.js')
 })
 
@@ -47,15 +44,15 @@ app.get('/api/notes',(request,response) => {
 // Get note by Id
 app.get('/api/notes/:id',(request,response,next) => {
   Note.findById(request.params.id)
-    .then(note =>{
+    .then(note => {
       if (note) {
         console.log(note.toJSON())
         response.json(note)
       } else {
         response.status(404).end()
       }
-  })
-  .catch(error => next(error))
+    })
+    .catch(error => next(error))
 })
 
 app.post('/api/notes',(request,response,next) => {
@@ -82,7 +79,7 @@ app.post('/api/notes',(request,response,next) => {
 })
 
 app.put('/api/notes/:id',(request,response,next) => {
-  const {content,important} = request.body
+  const { content,important } = request.body
   console.log(`Note with content ${content} and of importance ${important} has id ${request.params.id}`)
 
   Note.findById(request.params.id)
@@ -102,29 +99,28 @@ app.put('/api/notes/:id',(request,response,next) => {
 })
 
 //Delete Note
-app.delete('/api/notes/:id',(request,response,next) =>{
+app.delete('/api/notes/:id',(request,response,next) => {
   const id = request.params.id
   console.log(`id ${id} of type ${typeof id}`)
   Note.findByIdAndDelete(id)
     .then(result => {
       // check if a resources was actually deleted and return different status codes for two cases
-      console.log("result",result)
+      console.log('result',result)
       if (!result){
         response.status(404).end()
       }
       response.status(204).end()
-    
     })
     .catch(error => next(error))
 })
 
-const errorHandler = (error,request,response,next)=>{
-  console.error("error message: ",error.message)
+const errorHandler = (error,request,response,next) => {
+  console.error('error message: ',error.message)
 
   if(error.name === 'CastError'){
-    return response.status(400).send({error: 'malformed id'})
+    return response.status(400).send({ error: 'malformed id' })
   } else if(error.name === 'ValidationError'){
-    return response.status(404).json({error: error.message})
+    return response.status(404).json({ error: error.message })
   }
 
   next(error)
