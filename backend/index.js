@@ -19,10 +19,10 @@ takes the JSON data of a request, transforms it into a JS object and then attach
 */
 app.use(express.json())
 
- async function getCollections(){
-      const collections = await mongoose.connection.listCollections()
-      console.log("Collections:",collections)
-    }
+//  async function getCollections(){
+//       const collections = await mongoose.connection.listCollections()
+//       console.log("Collections:",collections)
+//     }
 
 // Root
 app.get('/',(request, response)=> {
@@ -58,7 +58,7 @@ app.get('/api/notes/:id',(request,response,next) => {
   .catch(error => next(error))
 })
 
-app.post('/api/notes',(request,response) => {
+app.post('/api/notes',(request,response,next) => {
 
   const body = request.body
 
@@ -74,9 +74,11 @@ app.post('/api/notes',(request,response) => {
     content: body.content,
     important: body.important || false
   })
-  note.save().then(savedNote => {
-    response.json(savedNote)
-  })
+  note.save()
+    .then(savedNote => {
+      response.json(savedNote)
+    })
+    .catch(error => next(error))
 })
 
 app.put('/api/notes/:id',(request,response,next) => {
@@ -121,6 +123,8 @@ const errorHandler = (error,request,response,next)=>{
 
   if(error.name === 'CastError'){
     return response.status(400).send({error: 'malformed id'})
+  } else if(error.name === 'ValidationError'){
+    return response.status(404).json({error: error.message})
   }
 
   next(error)
