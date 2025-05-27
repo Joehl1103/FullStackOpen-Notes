@@ -20,7 +20,7 @@ export default defineConfig([
     extends: ["js/recommended"],
     rules: {
       "no-unused-vars": "warn",
-      '@stylistic/indent': ['error',2],
+      '@stylistic/indent': ['error',4],
       '@stylistic/linebreak-style': ['error','unix'],
       '@stylistic/quotes': ['error','single'],
       '@stylistic/semi': ['error','never'],
