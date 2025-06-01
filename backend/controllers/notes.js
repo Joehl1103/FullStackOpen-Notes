@@ -1,16 +1,18 @@
 const notesRouter = require('express').Router()
-const Note = require('./models/note')
+const Note = require('../models/note.js')
 
 // Fetch All
-notesRouter.get('/',(request,response) => {
+notesRouter.get('/',(request,response,next) => {
     console.log('finding notes')
 
     Note.find({})
         .then(notes => {
+            console.log('notes',notes)
             response.json(notes)
-            notes.forEach(note => {
-                console.log(note)
-            })
+        })
+        .catch(error => {
+            console.log('an error occurred. Transferring error to error handling middleware')
+            next(error)
         })
 })
 

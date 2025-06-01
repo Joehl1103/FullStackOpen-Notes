@@ -1,9 +1,9 @@
 const express = require('express')
 const mongoose = require('mongoose')
-const config = require('./utils/config')
-const logger = require('./utils/logger')
-const middleware = require('./utils/middleware')
-const notesRouter = require('./controllers/notes')
+const config = require('./utils/config.js')
+const logger = require('./utils/logger.js')
+const middleware = require('./utils/middleware.js')
+const notesRouter = require('./controllers/notes.js')
 
 const app = express()
 
@@ -18,7 +18,16 @@ mongoose
         logger.error('error connecting to MongoDB:',error.message)
     })
 
+
 app.use(express.static('dist'))
+
+app.use((req, res, next) => {
+  let data = '';
+  req.on('data', chunk => { data += chunk; });
+  req.on('end', () => { console.log('Raw body:', data); });
+  next();
+});
+
 app.use(express.json())
 app.use(middleware.requestLogger)
 
