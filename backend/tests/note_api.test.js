@@ -10,13 +10,11 @@ const api = supertest(app)
 
 beforeEach(async () => {
     await Note.deleteMany({})
-    let noteObject = new Note(helper.initialNotes[0])
-    await noteObject.save()
-    noteObject = new Note(helper.initialNotes[1])
-    await noteObject.save()
+    await Note.insertMany(helper.initialNotes)
 })
 
 test('notes are returned as json', async () => {
+    console.log('entered test')
     await api
         .get('/api/notes')
         .expect(200)
@@ -73,9 +71,9 @@ test('a specific note can be viewed', async () => {
     const notesAtStart = await helper.notesInDb()
     const noteToView = notesAtStart[0]
 
-    const resultNote = await api
-        .get(`/api/notes/${noteToView.id}`)
-        .expect(200)
+    consjects.map(note => note.save())
+    await Promise.all(promiseArray)
+    console.log('
         .expect('Content-Type',/application\/json/)
 
     assert.deepStrictEqual(resultNote.body,noteToView)
