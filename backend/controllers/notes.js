@@ -2,57 +2,42 @@ const notesRouter = require('express').Router()
 const Note = require('../models/note.js')
 
 // Fetch All
-notesRouter.get('/',(request,response,next) => {
-    console.log('finding notes')
 
-    Note.find({})
-        .then(notes => {
-            console.log('notes',notes)
-            response.json(notes)
-        })
-        .catch(error => {
-            console.log('an error occurred. Transferring error to error handling middleware')
-            next(error)
-        })
+notesRouter.get('/',async (request,response,next) => {
+    try {
+        const notes = await Note.find({})
+        response.json(notes)
+    } catch (error){
+        console.log('an error occurred. Transferring error to error handling middleware')
+        next(error)
+    }
 })
 
-notesRouter.get('/:id',(request,response,next) => {
-    Note.findById(request.params.id)
-        .then(note => {
-            if (note) {
-                console.log(note.toJSON())
-                response.json(note)
-            } else {
-                response.status(404).end()
-            }
-        })
-        .catch(error => next(error))
+notesRouter.get('/:id',async (request,response) => {
+    const note = await Note.findById(request.params.id)
+    if (note) {
+        response.json(note)
+    } else {
+        response.status(404).end()
+    }
 })
 
-notesRouter.post('/',(request,response,next) => {
+notesRouter.post('/',async (request,response,next) => {
 
     const body = request.body
 
     // the body must have content
-    if (!body.content){
-        return response.status(400).json({
-            error: 'content missing'
-        })
-    }
     const note =  new Note({
         content: body.content,
         important: body.important || false
     })
-    note.save()
-        .then(savedNote => {
-            response.json(savedNote)
-        })
-        .catch(error => next(error))
+
+    const savedNote = await note.save()
+    response.status(201).json(savedNote)
 })
 
 notesRouter.put('/:id',(request,response,next) => {
     const { content,important } = request.body
-    console.log(`Note with content ${content} and of importance ${important} has id ${request.params.id}`)
 
     Note.findById(request.params.id)
         .then(note => {
@@ -71,19 +56,9 @@ notesRouter.put('/:id',(request,response,next) => {
 })
 
 //Delete Note
-notesRouter.delete('/:id',(request,response,next) => {
-    const id = request.params.id
-    console.log(`id ${id} of type ${typeof id}`)
-    Note.findByIdAndDelete(id)
-        .then(result => {
-        // check if a resources was actually deleted and return different status codes for two cases
-            console.log('result',result)
-            if (!result){
-                response.status(404).end()
-            }
-            response.status(204).end()
-        })
-        .catch(error => next(error))
+notesRouter.delete('/:id',async (request,response) => {
+    await Note.findByIdAndDelete(request.params.id)
+    response.status(204).end()
 })
 
 module.exports = notesRouter

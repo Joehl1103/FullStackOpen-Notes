@@ -7,7 +7,11 @@ const notesRouter = require('./controllers/notes.js')
 
 const app = express()
 
-logger.info('connecting to',config.MONGODB_URI)
+if(process.env.NODE_ENV === 'test'){
+    logger.info('connecting to test database at ',config.MONGODB_URI)
+} else {
+    logger.info('connecting to production database at ',config.MONGODB_URI)
+}
 
 mongoose
     .connect(config.MONGODB_URI)
@@ -20,13 +24,6 @@ mongoose
 
 
 app.use(express.static('dist'))
-
-app.use((req, res, next) => {
-  let data = '';
-  req.on('data', chunk => { data += chunk; });
-  req.on('end', () => { console.log('Raw body:', data); });
-  next();
-});
 
 app.use(express.json())
 app.use(middleware.requestLogger)
